@@ -3,20 +3,26 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/gocolly/colly/v2"
 )
 
 type SKU struct {
-	SKUID  string
-	Prices []Price
-	Name   string
+	SKUID    string
+	Prices   []Price
+	Name     string
+	ImageURL string
+	SKUURL   string
 }
 
 type Price struct {
-	Price string
-	Unit  string
+	Price    float64
+	Unit     int
+	UnitType string
+	Currency string
 }
 
 func main() {
@@ -28,6 +34,7 @@ func main() {
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// If attribute class is this long string return from callback
 		// As this a is irrelevant
+
 		if e.Attr("class") != "catLeft__single" {
 			return
 		}
@@ -45,19 +52,24 @@ func main() {
 		prices := make([]Price, len(e.ChildTexts("span.pricing__price")))
 
 		for i, v := range e.ChildTexts("span.pricing__price") {
+			p, _ := strconv.ParseFloat(trimFirstRune(v), 64)
 			prices[i] = Price{
-				Price: v,
+				Price:    p,
+				Currency: "GBP",
 			}
 		}
-		fmt.Println(e.ChildTexts("span.pricing__type")[0])
 		for i, v := range e.ChildTexts("span.pricing__type") {
-			prices[i].Unit = v
+			u := strings.Split(v[1:], " ")
+			prices[i].Unit, _ = strconv.Atoi(u[1])
+			prices[i].UnitType = u[0]
 		}
 
 		sku := SKU{
-			SKUID:  e.ChildText(".product__sku"),
-			Name:   e.ChildText(".product__title"),
-			Prices: prices,
+			SKUID:    e.ChildText(".product__sku")[5:],
+			Name:     e.ChildText(".product__title"),
+			Prices:   prices,
+			ImageURL: e.ChildAttr(".img-fluid", "src"),
+			SKUURL:   e.ChildAttr("a", "href"),
 		}
 		skus = append(skus, sku)
 	})
@@ -75,4 +87,9 @@ func main() {
 
 	// Dump json to the standard output (can be redirected to a file)
 	fmt.Println(string(jsonData))
+}
+
+func trimFirstRune(s string) string {
+	_, i := utf8.DecodeRuneInString(s)
+	return s[i:]
 }
