@@ -1,0 +1,13 @@
+Identifier
+
+#product-bulk-discount-table-container
+
+<div id="product-bulk-discount-table-container" data-bulkdiscountgroup="bio-watercups"></div>
+
+
+124129
+
+https://apps.cupsdirect.co.uk/bulkdiscountservice/BulkDiscountTable?group=bio-watercups&price=%C2%A333.99
+
+
+https://apps.cupsdirect.co.uk/bulkdiscountservice/BulkDiscountTable?group={$GROUPNAME}&price=%C2%A3{$PRICE}
